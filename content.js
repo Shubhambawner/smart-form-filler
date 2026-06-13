@@ -15,6 +15,14 @@ function extractContextClues(input) {
         if (boundLabel && boundLabel.innerText) clues.push(boundLabel.innerText);
     }
 
+    const labelledBy = input.getAttribute('aria-labelledby');
+    if (labelledBy) {
+        labelledBy.split(/\s+/).forEach(id => {
+            const labelEl = document.getElementById(id);
+            if (labelEl && labelEl.innerText) clues.push(labelEl.innerText);
+        });
+    }
+
     const parentLabel = input.closest('label');
     if (parentLabel && parentLabel.innerText) clues.push(parentLabel.innerText);
 

@@ -27,18 +27,40 @@ async function getEmbedder() {
     return embedderPipeline;
 }
 
-// Pre-compute and cache target vectors
+// Pre-compute and cache target vectors. Each field's context array is
+// flattened so every phrase is embedded and matched individually; the
+// highest-scoring phrase determines which field wins the match.
 async function getTargetVectors() {
     if (cachedTargetVectors) return cachedTargetVectors;
 
     const embedder = await getEmbedder();
-    cachedTargetVectors = {};
+    cachedTargetVectors = [];
 
     for (const field of PROFILE_FIELDS) {
-        const output = await embedder(field.context, { pooling: 'mean', normalize: true });
-        cachedTargetVectors[field.id] = Array.from(output.data);
+        for (const contextEntry of field.context) {
+            const output = await embedder(contextEntry, { pooling: 'mean', normalize: true });
+            cachedTargetVectors.push({ fieldId: field.id, vector: Array.from(output.data) });
+        }
     }
     return cachedTargetVectors;
+}
+
+// Cheap first pass: check whether any context phrase appears as a whole-word
+// match inside the label text (case-insensitive). Avoids the embedder entirely
+// when an obvious lexical match exists.
+function findRegexMatch(labelText) {
+    const normalizedLabel = String(labelText).toLowerCase();
+
+    for (const field of PROFILE_FIELDS) {
+        for (const contextEntry of field.context) {
+            const escaped = contextEntry.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = new RegExp(`\\b${escaped}\\b`);
+            if (pattern.test(normalizedLabel)) {
+                return field.id;
+            }
+        }
+    }
+    return null;
 }
 
 // Embed arbitrary text, caching by normalized text so repeated option labels
@@ -76,6 +98,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     else if (request.action === "findMatch") {
         (async () => {
             try {
+                const regexMatch = findRegexMatch(request.labelText);
+                if (regexMatch) {
+                    sendResponse({ success: true, matchedKey: regexMatch, score: 1 });
+                    return;
+                }
+
                 const embedder = await getEmbedder();
                 const targets = await getTargetVectors();
 
@@ -85,11 +113,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 let bestMatch = null;
                 let highestScore = -1;
 
-                for (const [key, targetVector] of Object.entries(targets)) {
-                    const score = dot(inputVector, targetVector);
+                for (const { fieldId, vector } of targets) {
+                    const score = dot(inputVector, vector);
                     if (score > highestScore) {
                         highestScore = score;
-                        bestMatch = key;
+                        bestMatch = fieldId;
                     }
                 }
 

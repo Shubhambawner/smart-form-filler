@@ -2,52 +2,103 @@ export const PROFILE_FIELDS = [
     {
         id: "firstName",
         label: "FIRST NAME",
-        placeholder: "e.g. John",
-        context: "First name, given name, your name, first nomenclature, fname",
-        defaultValue: "shubham"
+        context: ["First name", "given name", "your name", "fname"],
+        defaultValue: "Shubham"
     },
     {
         id: "lastName",
         label: "LAST NAME",
-        placeholder: "e.g. Doe",
-        context: "Last name, family name, surname, second name, lname",
-        defaultValue: "bawner"
+        context: ["Last name", "family name", "surname", "lname"],
+        defaultValue: "Bawner"
     },
     {
         id: "email",
         label: "EMAIL ADDRESS",
-        placeholder: "you@example.com",
-        context: "Email address, e-mail profile, electronic mail",
-        defaultValue: "shubham@gmail.com"
+        context: ["Email address", "e-mail", "electronic mail"],
+        defaultValue: "shreebawner@gmail.com"
     },
     {
-        id: "location",
-        label: "CURRENT LOCATION",
-        placeholder: "City, State, Country",
-        context: "City, State, Zip code, Location, Country, Region, Province, municipality",
-        defaultValue: "India"
+        id: "phone_code",
+        label: "PHONE CODE",
+        context: ["Phone country code", "ISD code", "dialing code", "country calling code"],
+        defaultValue: "+91"
     },
     {
         id: "phone",
         label: "PHONE NUMBER",
-        placeholder: "9421744544",
-        context: "Phone number, mobile, contact number, cell, telephone, phone",
+        context: ["Phone number", "mobile number", "contact number", "cell phone", "telephone"],
         defaultValue: "7410730191"
+    },
+    {
+        id: "location",
+        label: "CURRENT LOCATION",
+        context: ["Location", "Current location", "Full address", "Where do you live"],
+        defaultValue: "C V Raman Nagar, Bengaluru, Karnataka, India, 560093"
+    },
+    {
+        id: "addressLine1",
+        label: "ADDRESS LINE 1",
+        context: ["Address line 1", "Street address", "House number and street name"],
+        defaultValue: "C V Raman Nagar"
+    },
+    {
+        id: "addressLine2",
+        label: "ADDRESS LINE 2",
+        context: ["Address line 2", "Apartment suite unit"],
+        defaultValue: ""
+    },
+    {
+        id: "city",
+        label: "CITY",
+        context: ["City", "Town"],
+        defaultValue: "Bengaluru"
+    },
+    {
+        id: "state",
+        label: "STATE",
+        context: ["State", "Province", "Region"],
+        defaultValue: "Karnataka"
+    },
+    {
+        id: "country",
+        label: "COUNTRY",
+        context: ["Country", "Nation"],
+        defaultValue: "India"
+    },
+    {
+        id: "zipCode",
+        label: "ZIP / POSTAL CODE",
+        context: ["Zip code", "Postal code", "Pin code"],
+        defaultValue: "560093"
+    },
+    {
+        id: "gender",
+        label: "GENDER",
+        context: ["Gender", "Sex", "Gender identity"],
+        defaultValue: "Male"
+    },
+    {
+        id: "age",
+        label: "AGE",
+        context: ["Age", "How old are you", "Date of birth age"],
+        defaultValue: "24"
     },
     {
         id: "github",
         label: "GITHUB PROFILE",
-        placeholder: "https://github.com/...",
-        context: "GitHub profile link, git repository URL, code profile source control",
+        context: ["GitHub profile link", "Git repository URL", "Source code profile"],
         defaultValue: "https://github.com/shubhambawner"
     },
     {
         id: "workAuthorization",
         label: "WORK AUTHORIZATION",
-        // Use a string that represents your status as it appears on the form
-        // Greenhouse/Lever often use "Yes" / "No" or "Yes, I am..."
-        defaultValue: "Yes",
-        context: "legally authorized to work, work authorization, work permit, Work Authorization*"
+        context: ["Legally authorized to work", "Work authorization", "Work permit", "Visa sponsorship required"],
+        defaultValue: "Yes"
+    },
+    {
+        id: "aiCodingTools",
+        label: "AI Coding tools used",
+        context: ["AI Coding tools used"],
+        defaultValue: "Claude, Copilot"
     }
-
 ];
