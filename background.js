@@ -1,9 +1,10 @@
 import { pipeline, env, dot } from './transformers.js';
 import { PROFILE_FIELDS } from './config.js';
 
-// 1. Force local model loading and disable remote fetching to prevent crashes
+// 1. Allow remote model fetching (no local model files are bundled);
+// the model is cached by the browser after the first download.
 env.allowLocalModels = true;
-env.allowRemoteModels = false;
+env.allowRemoteModels = true;
 env.backends.onnx.wasm.numThreads = 1;
 
 // 2. Explicitly map the WASM binaries to your local files in the root folder
@@ -41,7 +42,7 @@ async function getTargetVectors() {
 
 // Install listener to set default data on first load
 chrome.runtime.onInstalled.addListener(() => {
-    getEmbedder();
+    getEmbedder().catch(err => console.error("Embedder preload failed:", err));
     chrome.storage.local.get(['userProfile'], (result) => {
         if (!result.userProfile) {
             const defaultProfile = {};
