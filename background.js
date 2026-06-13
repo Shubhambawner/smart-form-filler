@@ -54,21 +54,26 @@ async function embedText(text) {
     return vector;
 }
 
-// Install listener to set default data on first load
+// Preload the embedding model on install so the first autofill is fast
 chrome.runtime.onInstalled.addListener(() => {
     getEmbedder().catch(err => console.error("Embedder preload failed:", err));
-    chrome.storage.local.get(['userProfile'], (result) => {
-        if (!result.userProfile) {
-            const defaultProfile = {};
-            PROFILE_FIELDS.forEach(f => defaultProfile[f.id] = f.defaultValue);
-            chrome.storage.local.set({ userProfile: defaultProfile });
-        }
-    });
 });
 
 // Listen for mapping requests
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "findMatch") {
+    if (request.action === "getProfile") {
+        chrome.storage.local.get(['userProfile'], (result) => {
+            const saved = result.userProfile || {};
+            const profile = {};
+            PROFILE_FIELDS.forEach(field => {
+                const value = saved[field.id];
+                profile[field.id] = (value !== undefined && value !== '') ? value : field.defaultValue;
+            });
+            sendResponse({ profile });
+        });
+        return true;
+    }
+    else if (request.action === "findMatch") {
         (async () => {
             try {
                 const embedder = await getEmbedder();

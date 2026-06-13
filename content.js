@@ -114,8 +114,8 @@ function handleDropdown(selectEl, targetValue) {
 // Core filling engine
 
 function autoFillForm() {
-    chrome.storage.local.get(['userProfile'], (result) => {
-        const savedUserProfile = result.userProfile || {};
+    chrome.runtime.sendMessage({ action: "getProfile" }, (response) => {
+        const savedUserProfile = response?.profile || {};
 
         // Radio/checkbox groups are matched as a group, not individually
         processChoiceGroups(savedUserProfile);

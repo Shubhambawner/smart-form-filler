@@ -4,21 +4,21 @@ export const PROFILE_FIELDS = [
         label: "FIRST NAME",
         placeholder: "e.g. John",
         context: "First name, given name, your name, first nomenclature, fname",
-        defaultValue: "Shivam"
+        defaultValue: "shubham"
     },
     {
         id: "lastName",
         label: "LAST NAME",
         placeholder: "e.g. Doe",
         context: "Last name, family name, surname, second name, lname",
-        defaultValue: "Malpani"
+        defaultValue: "bawner"
     },
     {
         id: "email",
         label: "EMAIL ADDRESS",
         placeholder: "you@example.com",
         context: "Email address, e-mail profile, electronic mail",
-        defaultValue: "shivam@example.com"
+        defaultValue: "shubham@gmail.com"
     },
     {
         id: "location",
@@ -32,14 +32,14 @@ export const PROFILE_FIELDS = [
         label: "PHONE NUMBER",
         placeholder: "9421744544",
         context: "Phone number, mobile, contact number, cell, telephone, phone",
-        defaultValue: "9421744544"
+        defaultValue: "7410730191"
     },
     {
         id: "github",
         label: "GITHUB PROFILE",
         placeholder: "https://github.com/...",
         context: "GitHub profile link, git repository URL, code profile source control",
-        defaultValue: "https://github.com/shivammalpani"
+        defaultValue: "https://github.com/shubhambawner"
     },
     {
         id: "workAuthorization",
