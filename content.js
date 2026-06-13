@@ -73,43 +73,43 @@ function setReactValue(input, value) {
     });
 }
 
+// Semantically ranks each option against the target value and returns the
+// index with the highest similarity score.
+function rankOptions(targetValue, optionTexts, onBest) {
+    chrome.runtime.sendMessage({ action: "rankOptions", value: String(targetValue), options: optionTexts }, (response) => {
+        if (!response?.success) return;
+
+        let bestIndex = -1;
+        let highestScore = -Infinity;
+        response.scores.forEach((score, i) => {
+            if (optionTexts[i] && score > highestScore) {
+                highestScore = score;
+                bestIndex = i;
+            }
+        });
+
+        if (bestIndex === -1) return;
+        onBest(bestIndex, highestScore);
+    });
+}
+
 function handleDropdown(selectEl, targetValue) {
     const options = Array.from(selectEl.options);
-    const target = String(targetValue).toLowerCase();
+    if (options.length === 0) return;
 
-    let bestMatch = null;
-    let highestScore = 0;
+    const optionTexts = options.map(o => o.text.trim());
 
-    options.forEach(option => {
-        const optionText = option.text.toLowerCase().trim();
-
-        // Scoring logic:
-        // 1. Perfect Match: Score 1.0
-        // 2. Contains Target: Score 0.8
-        // 3. Target Contains Option: Score 0.6
-        let score = 0;
-        if (optionText === target) score = 1.0;
-        else if (optionText.includes(target)) score = 0.8;
-        else if (target.includes(optionText)) score = 0.6;
-
-        if (score > highestScore) {
-            highestScore = score;
-            bestMatch = option;
-        }
-    });
-
-    if (bestMatch && highestScore > 0) {
-        selectEl.value = bestMatch.value;
+    rankOptions(targetValue, optionTexts, (bestIndex, highestScore) => {
+        const bestOption = options[bestIndex];
+        selectEl.value = bestOption.value;
 
         // Dispatch sequence for framework detection
         ['input', 'change', 'blur'].forEach(type => {
             selectEl.dispatchEvent(new Event(type, { bubbles: true, cancelable: true }));
         });
 
-        console.log(`✅ Selected "${bestMatch.text}" (Score: ${highestScore}) for target "${targetValue}"`);
-    } else {
-        console.warn(`⚠️ No match found for "${targetValue}" in dropdown: ${selectEl.name}`);
-    }
+        console.log(`✅ Selected "${bestOption.text}" (Score: ${highestScore.toFixed(3)}) for target "${targetValue}"`);
+    });
 }
 // Core filling engine
 
@@ -220,7 +220,7 @@ function attachLazyObserver() {
 function handleMultiChoice(inputs, targetValue) {
     const targets = String(targetValue)
         .split(/\s*[,;]\s*|\s+and\s+/i)
-        .map(t => t.trim().toLowerCase())
+        .map(t => t.trim())
         .filter(Boolean);
 
     if (inputs.length > 1 && inputs[0].type === 'checkbox' && targets.length > 1) {
@@ -228,36 +228,20 @@ function handleMultiChoice(inputs, targetValue) {
         return;
     }
 
-    selectBestChoice(inputs, targets[0] ?? String(targetValue).toLowerCase().trim());
+    selectBestChoice(inputs, targets[0] ?? String(targetValue).trim());
 }
 
 function selectBestChoice(inputs, target) {
-    let bestMatch = null;
-    let highestScore = 0;
+    const optionTexts = inputs.map(input => (input.labels && input.labels[0]) ? input.labels[0].innerText.trim() : "");
+    if (!optionTexts.some(Boolean)) return;
 
-    inputs.forEach(input => {
-        // Look for the text label associated with this specific button
-        const labelText = (input.labels && input.labels[0]) ? input.labels[0].innerText : "";
-        const optionText = labelText.toLowerCase().trim();
-
-        // Scoring: 1.0 for exact, 0.8 for partial, 0.5 for keyword match
-        let score = 0;
-        if (optionText === target) score = 1.0;
-        else if (optionText.includes(target)) score = 0.8;
-        else if (target.includes(optionText)) score = 0.5;
-
-        if (score > highestScore) {
-            highestScore = score;
-            bestMatch = input;
-        }
-    });
-
-    if (bestMatch && highestScore > 0.3) { // 0.3 threshold to avoid random guessing
+    rankOptions(target, optionTexts, (bestIndex, highestScore) => {
+        const bestMatch = inputs[bestIndex];
         bestMatch.checked = true;
         bestMatch.dispatchEvent(new Event('change', { bubbles: true }));
         bestMatch.dispatchEvent(new Event('click', { bubbles: true })); // Some forms need the click event
-        console.log(`✅ Selected "${bestMatch.labels[0].innerText}" (Score: ${highestScore})`);
-    }
+        console.log(`✅ Selected "${optionTexts[bestIndex]}" (Score: ${highestScore.toFixed(3)})`);
+    });
 }
 
 

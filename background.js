@@ -17,6 +17,7 @@ env.backends.onnx.wasm.wasmPaths = {
 
 let embedderPipeline = null;
 let cachedTargetVectors = null;
+const textEmbeddingCache = new Map();
 
 // Initialize model
 async function getEmbedder() {
@@ -38,6 +39,19 @@ async function getTargetVectors() {
         cachedTargetVectors[field.id] = Array.from(output.data);
     }
     return cachedTargetVectors;
+}
+
+// Embed arbitrary text, caching by normalized text so repeated option labels
+// (e.g. country names, "Yes"/"No") aren't re-embedded on every autofill pass.
+async function embedText(text) {
+    const key = String(text).toLowerCase().trim();
+    if (textEmbeddingCache.has(key)) return textEmbeddingCache.get(key);
+
+    const embedder = await getEmbedder();
+    const output = await embedder(text, { pooling: 'mean', normalize: true });
+    const vector = Array.from(output.data);
+    textEmbeddingCache.set(key, vector);
+    return vector;
 }
 
 // Install listener to set default data on first load
@@ -82,6 +96,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
             } catch (error) {
                 console.error("Embedding Error:", error);
+                sendResponse({ success: false, error: error.message });
+            }
+        })();
+        return true;
+    }
+    else if (request.action === "rankOptions") {
+        (async () => {
+            try {
+                const { value, options } = request;
+                const valueVector = await embedText(value);
+
+                const scores = [];
+                for (const optionText of options) {
+                    const optionVector = await embedText(optionText);
+                    scores.push(dot(valueVector, optionVector));
+                }
+
+                sendResponse({ success: true, scores });
+            } catch (error) {
+                console.error("Ranking Error:", error);
                 sendResponse({ success: false, error: error.message });
             }
         })();
